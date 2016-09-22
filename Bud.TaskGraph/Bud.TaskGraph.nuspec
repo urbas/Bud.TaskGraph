@@ -8,7 +8,7 @@
     <owners>Matej Urbas</owners>
     <licenseUrl>https://github.com/urbas/Bud.TaskGraph/blob/master/LICENCE.md</licenseUrl>
     <projectUrl>https://github.com/urbas/Bud.TaskGraph</projectUrl>
-    <iconUrl>https://ci.appveyor.com/api/projects/status/190xdtdaq6dotbjb/branch/master</iconUrl>
+    <iconUrl>https://ci.appveyor.com/api/projects/status/mjsra2v19mje1tx5/branch/master</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Bud.TaskGraph helps you build dependency graphs of actions and execute them asynchronously and in parallel.</description>
     <releaseNotes>
