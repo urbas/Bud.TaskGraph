@@ -1,0 +1,7 @@
+version: 1.0.0-b{build}
+before_build:
+- ps: nuget restore
+build:
+  project: Bud.TaskGraph.sln
+  verbosity: minimal
+deploy: off
