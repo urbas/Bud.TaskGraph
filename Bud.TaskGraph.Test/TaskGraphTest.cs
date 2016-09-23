@@ -2,8 +2,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Threading;
 using Moq;
 using NUnit.Framework;
+using static System.Linq.Enumerable;
 
 namespace Bud {
   public class TaskGraphTest {
@@ -24,12 +26,25 @@ namespace Bud {
     }
 
     [Test]
-    public void Run_invokes_dependencies_with_same_name_once() {
-      var action = new Mock<Action>();
-      var dependency = new TaskGraph(action.Object, ImmutableArray<TaskGraph>.Empty);
-      var graph = new TaskGraph(() => {}, ImmutableArray.Create(dependency, dependency));
-      graph.Run();
-      action.Verify(a => a(), Times.Once);
+    public void Run_invokes_each_task_only_once() {
+      var actionA = new Mock<Action>();
+      var taskA = new TaskGraph(actionA.Object, ImmutableArray<TaskGraph>.Empty);
+      var taskB = new TaskGraph(() => {}, ImmutableArray.Create(taskA, taskA));
+      var taskC = new TaskGraph(() => {}, ImmutableArray.Create(taskB, taskB));
+      taskC.Run();
+      actionA.Verify(a => a(), Times.Once);
+    }
+
+    [Test]
+    [Timeout(2000)]
+    public void Run_executes_dependencies_in_parallel() {
+      int taskCount = 2;
+      var countdown = new CountdownEvent(taskCount);
+      var tasks = Range(0, taskCount).Select(i => new TaskGraph(() => {
+        countdown.Signal();
+        countdown.Wait();
+      }));
+      new TaskGraph(tasks).Run();
     }
 
     [Test]

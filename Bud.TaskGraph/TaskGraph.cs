@@ -25,13 +25,10 @@ namespace Bud {
     /// <param name="action">the action to be invoked after all the dependencies have executed.</param>
     /// <param name="dependencies">the dependencies to execute before executing the action.</param>
     /// <remarks>There is no guarantee on the order of execution of dependencies.</remarks>
-    public TaskGraph(Action action, params TaskGraph[] dependencies) : this(action, ImmutableArray.CreateRange(dependencies)) {}
-
-    /// <summary>
-    ///   Creates a task graph with a single action (without dependencies).
-    /// </summary>
-    /// <param name="action">the action to be invoked.</param>
-    public TaskGraph(Action action) : this(action, ImmutableArray<TaskGraph>.Empty) {}
+    public TaskGraph(Action action, ImmutableArray<TaskGraph> dependencies) {
+      Action = action;
+      Dependencies = dependencies;
+    }
 
     /// <summary>
     ///   Creates a task graph with a root action and some dependency actions.
@@ -39,12 +36,44 @@ namespace Bud {
     /// <param name="action">the action to be invoked after all the dependencies have executed.</param>
     /// <param name="dependencies">the dependencies to execute before executing the action.</param>
     /// <remarks>There is no guarantee on the order of execution of dependencies.</remarks>
-    public TaskGraph(Action action, ImmutableArray<TaskGraph> dependencies) {
-      Action = action;
-      Dependencies = dependencies;
-    }
+    public TaskGraph(Action action, params TaskGraph[] dependencies)
+      : this(action, ImmutableArray.CreateRange(dependencies)) {}
 
-    internal TaskGraph(ImmutableArray<TaskGraph> subGraphs) : this(null, subGraphs) {}
+    /// <summary>
+    ///   Creates a task graph without any action and some dependencies.
+    /// </summary>
+    /// <param name="dependencies">the dependencies to execute before executing the action.</param>
+    /// <remarks>There is no guarantee on the order of execution of dependencies.</remarks>
+    public TaskGraph(params TaskGraph[] dependencies) : this(null, ImmutableArray.CreateRange(dependencies)) {}
+
+    /// <summary>
+    ///   Creates a task graph with a root action and some dependency actions.
+    /// </summary>
+    /// <param name="action">the action to be invoked after all the dependencies have executed.</param>
+    /// <param name="dependencies">the dependencies to execute before executing the action.</param>
+    /// <remarks>There is no guarantee on the order of execution of dependencies.</remarks>
+    public TaskGraph(Action action, IEnumerable<TaskGraph> dependencies)
+      : this(action, ImmutableArray.CreateRange(dependencies)) {}
+
+    /// <summary>
+    ///   Creates a task graph without any action and some dependencies.
+    /// </summary>
+    /// <param name="dependencies">the dependencies to execute before executing the action.</param>
+    /// <remarks>There is no guarantee on the order of execution of dependencies.</remarks>
+    public TaskGraph(ImmutableArray<TaskGraph> dependencies) : this(null, dependencies) {}
+
+    /// <summary>
+    ///   Creates a task graph without any action and some dependencies.
+    /// </summary>
+    /// <param name="dependencies">the dependencies to execute before executing the action.</param>
+    /// <remarks>There is no guarantee on the order of execution of dependencies.</remarks>
+    public TaskGraph(IEnumerable<TaskGraph> dependencies) : this(null, ImmutableArray.CreateRange(dependencies)) {}
+
+    /// <summary>
+    ///   Creates a task graph with a single action (without dependencies).
+    /// </summary>
+    /// <param name="action">the action to be invoked.</param>
+    public TaskGraph(Action action) : this(action, ImmutableArray<TaskGraph>.Empty) {}
 
     /// <summary>
     ///   Executes all tasks in this graph in parallel (using the <see cref="Task" /> API).
@@ -92,11 +121,11 @@ namespace Bud {
     }
 
     private class TaskGraphBuilder<TTask> {
-      private readonly Func<TTask, IEnumerable<TTask>> dependenciesOfTask;
       private readonly Func<TTask, Action> actionOfTask;
-      private readonly Func<TTask, string> nameOfTask;
-      private readonly IDictionary<string, TaskGraph> finishedTasks;
+      private readonly Func<TTask, IEnumerable<TTask>> dependenciesOfTask;
       private readonly HashSet<string> dependencyChain;
+      private readonly IDictionary<string, TaskGraph> finishedTasks;
+      private readonly Func<TTask, string> nameOfTask;
       private readonly List<string> orderedDependencyChain;
 
       public TaskGraphBuilder(Func<TTask, string> nameOfTask,
