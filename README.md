@@ -21,6 +21,6 @@ var taskC = new TaskGraph(() => Console.WriteLine("C"), taskA, taskB);
 // This function blocks. It runs A and B first, and then C.
 taskC.Run();
 
-// The asynchronous version of the above call.
+// Asynchronous version of Run():
 await taskC.RunAsync();
 ```
