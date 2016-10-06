@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Bud.TaskGraph</id>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <title>Bud.TaskGraph</title>
     <authors>Matej Urbas</authors>
     <owners>Matej Urbas</owners>
@@ -12,7 +12,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Bud.TaskGraph helps you build dependency graphs of actions and execute them asynchronously and in parallel.</description>
     <releaseNotes>
-      First major release.
+      - Added static function TaskGraph.ToTaskGraph. It creates a task graph out of a list of actions. Actions in this graph will be executed in parallel.
     </releaseNotes>
     <copyright>Copyright 2016</copyright>
     <tags>Bud.TaskGraph initial release.</tags>

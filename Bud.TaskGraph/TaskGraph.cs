@@ -87,6 +87,19 @@ namespace Bud {
     public async Task RunAsync() => await ToTask(new Dictionary<TaskGraph, Task>());
 
     /// <summary>
+    ///   Creates a task graph in which the given <paramref name="parallelActions"/> should be executed
+    ///   in parallel.
+    /// </summary>
+    /// <param name="parallelActions">
+    ///   the actions that should be executed in parallel.
+    /// </param>
+    /// <returns>
+    ///   a task graph whose dependencies are  the given <paramref name="parallelActions" />.
+    /// </returns>
+    public static TaskGraph ToTaskGraph(params Action[] parallelActions)
+      => new TaskGraph(parallelActions.Select(action => new TaskGraph(action)));
+
+    /// <summary>
     ///   Converts objects of type <typeparamref name="T" /> into a task graph. Each object must have a name. The name is
     ///   retrieved via the given <paramref name="nameOfTask" /> callback function. Tasks with the same name are considered
     ///   identical. Dependencies of an object are retrieved via the <paramref name="dependenciesOfTask" /> function. If

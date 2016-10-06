@@ -96,5 +96,15 @@ namespace Bud {
       Assert.That(ex.Message,
                   Does.Contain("a depends on b depends on c depends on a"));
     }
+
+    [Test]
+    public void ToTaskGraph_from_actions() {
+      Action a = () => Console.WriteLine("Foo");
+      Action b = () => Console.WriteLine("Bar");
+      var taskGraph = TaskGraph.ToTaskGraph(a, b);
+      Assert.AreEqual(null, taskGraph.Action);
+      Assert.AreEqual(a, taskGraph.Dependencies[0].Action);
+      Assert.AreEqual(b, taskGraph.Dependencies[1].Action);
+    }
   }
 }
