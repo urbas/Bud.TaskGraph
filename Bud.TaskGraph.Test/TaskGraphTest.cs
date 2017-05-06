@@ -64,7 +64,12 @@ namespace Bud {
         .Add("c", new Mock<Action>().Object)
         .Add("d", new Mock<Action>().Object);
 
-      var taskGraph = TaskGraph.ToTaskGraph(new[] {"a", "b"}, s => s, s => deps[s], s => actions[s]);
+      var taskNames = new Mock<Func<string, string>>();
+      foreach (var task in deps.Keys) {
+        taskNames.Setup(s => s(task)).Returns(task);
+      }
+
+      var taskGraph = TaskGraph.ToTaskGraph(new[] {"a", "b"}, taskNames.Object, s => deps[s], s => actions[s]);
 
       var a = taskGraph.Dependencies[0];
       var b = taskGraph.Dependencies[1];
@@ -82,20 +87,31 @@ namespace Bud {
       Assert.AreSame(actions["b"], b.Action);
       Assert.AreSame(actions["c"], c.Action);
       Assert.AreSame(actions["d"], d.Action);
+
+      foreach (var task in deps.Keys) {
+        taskNames.Verify(s => s(task), Times.AtMostOnce);
+      }
     }
 
     [Test]
     public void ToTaskGraph_throws_when_cycles_present() {
-      var deps = ImmutableDictionary<string, IEnumerable<string>>
-        .Empty
-        .Add("a", new[] {"b"})
-        .Add("b", new[] {"c"})
-        .Add("c", new[] {"a"});
+      var deps = ImmutableDictionary<string, IEnumerable<string>>.Empty
+                                                                 .Add("a", new[] {"b"})
+                                                                 .Add("b", new[] {"c"})
+                                                                 .Add("c", new[] {"a"});
+      var taskNames = new Mock<Func<string, string>>();
+      foreach (var task in deps.Keys) {
+        taskNames.Setup(s => s(task)).Returns(task);
+      }
 
       var ex = Assert.Throws<Exception>(() => TaskGraph.ToTaskGraph(new[] {"a"}, s => s, s => deps[s], s => null));
 
       Assert.That(ex.Message,
                   Does.Contain("a depends on b depends on c depends on a"));
+
+      foreach (var task in deps.Keys) {
+        taskNames.Verify(s => s(task), Times.AtMostOnce);
+      }
     }
 
     [Test]
@@ -110,11 +126,17 @@ namespace Bud {
 
     [Test]
     public void ToTaskGraph_detects_name_clashes() {
-      var exception = Assert.Throws<Exception>(() => TaskGraph.ToTaskGraph(new[] {0, 1}, s => "foo",
+      var taskNames = new Mock<Func<int, string>>();
+      taskNames.Setup(s => s(0)).Returns("foo");
+      taskNames.Setup(s => s(1)).Returns("foo");
+
+      var exception = Assert.Throws<Exception>(() => TaskGraph.ToTaskGraph(new[] {0, 1}, taskNames.Object,
                                                                            s => Empty<int>(),
                                                                            s => () => { }));
       Assert.AreEqual(exception.Message,
                       "Detected multiple tasks with the name 'foo'. Tasks must have unique names.");
+      taskNames.Verify(s => s(0), Times.AtMostOnce);
+      taskNames.Verify(s => s(1), Times.AtMostOnce);
     }
   }
 }

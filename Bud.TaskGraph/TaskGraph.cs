@@ -37,14 +37,14 @@ namespace Bud {
     /// <param name="dependencies">the dependencies to execute before executing the action.</param>
     /// <remarks>There is no guarantee on the order of execution of dependencies.</remarks>
     public TaskGraph(Action action, params TaskGraph[] dependencies)
-      : this(action, ImmutableArray.CreateRange(dependencies)) {}
+      : this(action, ImmutableArray.CreateRange(dependencies)) { }
 
     /// <summary>
     ///   Creates a task graph without any action and some dependencies.
     /// </summary>
     /// <param name="dependencies">the dependencies to execute before executing the action.</param>
     /// <remarks>There is no guarantee on the order of execution of dependencies.</remarks>
-    public TaskGraph(params TaskGraph[] dependencies) : this(null, ImmutableArray.CreateRange(dependencies)) {}
+    public TaskGraph(params TaskGraph[] dependencies) : this(null, ImmutableArray.CreateRange(dependencies)) { }
 
     /// <summary>
     ///   Creates a task graph with a root action and some dependency actions.
@@ -53,27 +53,27 @@ namespace Bud {
     /// <param name="dependencies">the dependencies to execute before executing the action.</param>
     /// <remarks>There is no guarantee on the order of execution of dependencies.</remarks>
     public TaskGraph(Action action, IEnumerable<TaskGraph> dependencies)
-      : this(action, ImmutableArray.CreateRange(dependencies)) {}
+      : this(action, ImmutableArray.CreateRange(dependencies)) { }
 
     /// <summary>
     ///   Creates a task graph without any action and some dependencies.
     /// </summary>
     /// <param name="dependencies">the dependencies to execute before executing the action.</param>
     /// <remarks>There is no guarantee on the order of execution of dependencies.</remarks>
-    public TaskGraph(ImmutableArray<TaskGraph> dependencies) : this(null, dependencies) {}
+    public TaskGraph(ImmutableArray<TaskGraph> dependencies) : this(null, dependencies) { }
 
     /// <summary>
     ///   Creates a task graph without any action and some dependencies.
     /// </summary>
     /// <param name="dependencies">the dependencies to execute before executing the action.</param>
     /// <remarks>There is no guarantee on the order of execution of dependencies.</remarks>
-    public TaskGraph(IEnumerable<TaskGraph> dependencies) : this(null, ImmutableArray.CreateRange(dependencies)) {}
+    public TaskGraph(IEnumerable<TaskGraph> dependencies) : this(null, ImmutableArray.CreateRange(dependencies)) { }
 
     /// <summary>
     ///   Creates a task graph with a single action (without dependencies).
     /// </summary>
     /// <param name="action">the action to be invoked.</param>
-    public TaskGraph(Action action) : this(action, ImmutableArray<TaskGraph>.Empty) {}
+    public TaskGraph(Action action) : this(action, ImmutableArray<TaskGraph>.Empty) { }
 
     /// <summary>
     ///   Executes all tasks in this graph in parallel (using the <see cref="Task" /> API).
@@ -140,7 +140,7 @@ namespace Bud {
       private readonly Func<TTask, IEnumerable<TTask>> dependenciesOfTask;
       private readonly HashSet<string> taskNames = new HashSet<string>();
       private readonly HashSet<TTask> dependencyChain = new HashSet<TTask>();
-      private readonly List<TTask> orderedDependencyChain = new List<TTask>();
+      private readonly List<string> orderedDependencyChain = new List<string>();
       private readonly IDictionary<TTask, TaskGraph> taskToTaskGraph = new Dictionary<TTask, TaskGraph>();
 
       public TaskGraphBuilder(Func<TTask, string> nameOfTask,
@@ -161,12 +161,33 @@ namespace Bud {
         if (taskToTaskGraph.TryGetValue(task, out cachedTaskGraph)) {
           return cachedTaskGraph;
         }
-        AssertNoCycles(task);
-        AssertNoTaskNameClashes(task);
         PushTaskOnStack(task);
         var dependencyTasks = ToTaskGraphs(dependenciesOfTask(task));
         PopTaskFromStack(task);
         return CreateTaskGraph(task, dependencyTasks);
+      }
+
+      private void PushTaskOnStack(TTask task) {
+        var taskName = nameOfTask(task);
+        AssertNoCycles(task, taskName);
+        AssertNoNameClashes(taskName);
+        dependencyChain.Add(task);
+        orderedDependencyChain.Add(taskName);
+      }
+
+      private void AssertNoNameClashes(string taskName) {
+        if (taskNames.Remove(taskName)) {
+          throw new Exception($"Detected multiple tasks with the name '{taskName}'. Tasks must have unique names.");
+        }
+        taskNames.Add(taskName);
+      }
+
+      private void AssertNoCycles(TTask task, string taskName) {
+        if (dependencyChain.Contains(task)) {
+          throw new Exception("Detected a dependency cycle: " +
+                              $"'{string.Join(" depends on ", orderedDependencyChain)} " +
+                              $"depends on {taskName}'.");
+        }
       }
 
       private void PopTaskFromStack(TTask task) {
@@ -178,27 +199,6 @@ namespace Bud {
         var thisTaskGraph = new TaskGraph(actionOfTask(task), dependencyTasks);
         taskToTaskGraph.Add(task, thisTaskGraph);
         return thisTaskGraph;
-      }
-
-      private void PushTaskOnStack(TTask task) {
-        dependencyChain.Add(task);
-        orderedDependencyChain.Add(task);
-      }
-
-      private void AssertNoCycles(TTask task) {
-        if (dependencyChain.Contains(task)) {
-          throw new Exception("Detected a dependency cycle: " +
-                              $"'{string.Join(" depends on ", orderedDependencyChain)} " +
-                              $"depends on {nameOfTask(task)}'.");
-        }
-      }
-
-      private void AssertNoTaskNameClashes(TTask task) {
-        var taskName = nameOfTask(task);
-        if (taskNames.Remove(taskName)) {
-          throw new Exception($"Detected multiple tasks with the name '{taskName}'. Tasks must have unique names.");
-        }
-        taskNames.Add(nameOfTask(task));
       }
     }
   }
