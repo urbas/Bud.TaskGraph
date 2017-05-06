@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/mjsra2v19mje1tx5/branch/master?svg=true)](https://ci.appveyor.com/project/urbas/bud-taskgraph/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/mjsra2v19mje1tx5/branch/master?svg=true)](https://ci.appveyor.com/project/urbas/bud-taskgraph/branch/master) [![NuGet](https://img.shields.io/nuget/v/Bud.TaskGraph.svg)](https://www.nuget.org/packages/Bud.TaskGraph/)
 
 __Table of contents__
 
