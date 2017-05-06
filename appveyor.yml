@@ -4,4 +4,18 @@ before_build:
 build:
   project: Bud.TaskGraph.sln
   verbosity: minimal
-deploy: off
+before_package:
+  - ps: cd Bud.TaskGraph; nuget pack Bud.TaskGraph.nuspec
+artifacts:
+  - path: Bud.TaskGraph/bin/Debug/Bud.TaskGraph.dll
+    name: Bud.TaskGraph.dll
+  - path: Bud.TaskGraph/bin/Debug/Bud.TaskGraph.xml
+    name: Bud.TaskGraph.xml
+  - path: 'Bud.TaskGraph/*.nupkg'
+deploy:
+  provider: NuGet
+  api_key:
+    secure: vHH6XlHbTmh514SHTC2RTHVZmB+Tv+7WkhGT7Jz+ctyJyYfa9CbSukRVqYhWSh3e
+  artifact: /.*\.nupkg/
+  on:
+    appveyor_repo_tag: true

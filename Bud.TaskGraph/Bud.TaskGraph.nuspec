@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Bud.TaskGraph</id>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <title>Bud.TaskGraph</title>
     <authors>Matej Urbas</authors>
     <owners>Matej Urbas</owners>
@@ -12,12 +12,12 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Bud.TaskGraph helps you build dependency graphs of actions and execute them asynchronously and in parallel.</description>
     <releaseNotes>
-      - Added static function TaskGraph.ToTaskGraph. It creates a task graph out of a list of actions. Actions in this graph will be executed in parallel.
+      - Upgraded System.Collections.Immutable to 1.3.1.
     </releaseNotes>
     <copyright>Copyright 2016</copyright>
-    <tags>Bud.TaskGraph initial release.</tags>
+    <tags>Bud.TaskGraph task parallel execution</tags>
     <dependencies>
-      <dependency id="System.Collections.Immutable" version="1.2.0" />
+      <dependency id="System.Collections.Immutable" version="1.3.1" />
     </dependencies>
   </metadata>
   <files>
