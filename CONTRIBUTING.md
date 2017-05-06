@@ -16,7 +16,7 @@ Open the solution in Visual Studio 2015, build it, and run NUnit tests.
 
 # Releasing a new version
 
-1. Update the version and release notes in [the nuspec file](./Bud.TaskGraph/Bud.TaskGraph.nuspec). Create a pull request for
+1. Update the version in [appveyor.yml](./appveyor.yml). Create a pull request for
    this change.
 1. Let the builds pass and review the changes.
 1. Merge the pull request.
