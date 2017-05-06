@@ -108,7 +108,8 @@ namespace Bud {
     /// </summary>
     /// <typeparam name="T">the type of objects to convert to a task graph.</typeparam>
     /// <param name="rootTasks">the task objects from which to start building the task graph.</param>
-    /// <param name="nameOfTask">the function that returns the name of the given task object.</param>
+    /// <param name="nameOfTask">the function that returns the name of the given task object. Note that tasks must have
+    /// unique names.</param>
     /// <param name="dependenciesOfTask">the function that returns task objects on which the given task object depends.</param>
     /// <param name="actionOfTask">the function that returns the action for the given task object.</param>
     /// <returns>a task graph that can be executed.</returns>
