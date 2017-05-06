@@ -1,4 +1,4 @@
-version: 1.2.1-b{build}
+version: 1.2.2-b{build}
 before_build:
 - ps: nuget restore
 build:
