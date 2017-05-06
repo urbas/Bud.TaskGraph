@@ -29,8 +29,8 @@ namespace Bud {
     public void Run_invokes_each_task_only_once() {
       var actionA = new Mock<Action>();
       var taskA = new TaskGraph(actionA.Object, ImmutableArray<TaskGraph>.Empty);
-      var taskB = new TaskGraph(() => {}, ImmutableArray.Create(taskA, taskA));
-      var taskC = new TaskGraph(() => {}, ImmutableArray.Create(taskB, taskB));
+      var taskB = new TaskGraph(() => { }, ImmutableArray.Create(taskA, taskA));
+      var taskC = new TaskGraph(() => { }, ImmutableArray.Create(taskB, taskB));
       taskC.Run();
       actionA.Verify(a => a(), Times.Once);
     }
@@ -40,10 +40,11 @@ namespace Bud {
     public void Run_executes_dependencies_in_parallel() {
       int taskCount = 2;
       var countdown = new CountdownEvent(taskCount);
-      var tasks = Range(0, taskCount).Select(i => new TaskGraph(() => {
-        countdown.Signal();
-        countdown.Wait();
-      }));
+      var tasks = Range(0, taskCount)
+        .Select(i => new TaskGraph(() => {
+          countdown.Signal();
+          countdown.Wait();
+        }));
       new TaskGraph(tasks).Run();
     }
 
@@ -105,6 +106,15 @@ namespace Bud {
       Assert.AreEqual(null, taskGraph.Action);
       Assert.AreEqual(a, taskGraph.Dependencies[0].Action);
       Assert.AreEqual(b, taskGraph.Dependencies[1].Action);
+    }
+
+    [Test]
+    public void ToTaskGraph_detects_name_clashes() {
+      var exception = Assert.Throws<Exception>(() => TaskGraph.ToTaskGraph(new[] {0, 1}, s => "foo",
+                                                                           s => Empty<int>(),
+                                                                           s => () => { }));
+      Assert.AreEqual(exception.Message,
+                      "Detected multiple tasks with the name 'foo'. Tasks must have unique names.");
     }
   }
 }

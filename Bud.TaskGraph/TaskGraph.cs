@@ -134,12 +134,13 @@ namespace Bud {
     }
 
     private class TaskGraphBuilder<TTask> {
+      private readonly Func<TTask, string> nameOfTask;
       private readonly Func<TTask, Action> actionOfTask;
       private readonly Func<TTask, IEnumerable<TTask>> dependenciesOfTask;
-      private readonly HashSet<string> dependencyChain;
-      private readonly IDictionary<string, TaskGraph> finishedTasks;
-      private readonly Func<TTask, string> nameOfTask;
-      private readonly List<string> orderedDependencyChain;
+      private readonly HashSet<string> taskNames = new HashSet<string>();
+      private readonly HashSet<TTask> dependencyChain = new HashSet<TTask>();
+      private readonly List<TTask> orderedDependencyChain = new List<TTask>();
+      private readonly IDictionary<TTask, TaskGraph> taskToTaskGraph = new Dictionary<TTask, TaskGraph>();
 
       public TaskGraphBuilder(Func<TTask, string> nameOfTask,
                               Func<TTask, IEnumerable<TTask>> dependenciesOfTask,
@@ -147,9 +148,6 @@ namespace Bud {
         this.dependenciesOfTask = dependenciesOfTask;
         this.actionOfTask = actionOfTask;
         this.nameOfTask = nameOfTask;
-        finishedTasks = new Dictionary<string, TaskGraph>();
-        dependencyChain = new HashSet<string>();
-        orderedDependencyChain = new List<string>();
       }
 
       public TaskGraph ToTaskGraph(IEnumerable<TTask> tasks) => new TaskGraph(ToTaskGraphs(tasks));
@@ -158,36 +156,48 @@ namespace Bud {
         => tasks.Select(ToTaskGraph).ToImmutableArray();
 
       private TaskGraph ToTaskGraph(TTask task) {
-        var taskName = nameOfTask(task);
         TaskGraph cachedTaskGraph;
-        if (finishedTasks.TryGetValue(taskName, out cachedTaskGraph)) {
+        if (taskToTaskGraph.TryGetValue(task, out cachedTaskGraph)) {
           return cachedTaskGraph;
         }
-        EnterTask(taskName);
+        AssertNoCycles(task);
+        AssertNoTaskNameClashes(task);
+        PushTaskOnStack(task);
         var dependencyTasks = ToTaskGraphs(dependenciesOfTask(task));
-        LeaveTask(taskName);
-        return CreateTaskGraph(task, taskName, dependencyTasks);
+        PopTaskFromStack(task);
+        return CreateTaskGraph(task, dependencyTasks);
       }
 
-      private void EnterTask(string taskName) {
-        if (dependencyChain.Contains(taskName)) {
-          throw new Exception("Detected a dependency cycle: " +
-                              $"'{string.Join(" depends on ", orderedDependencyChain)} " +
-                              $"depends on {taskName}'.");
-        }
-        dependencyChain.Add(taskName);
-        orderedDependencyChain.Add(taskName);
-      }
-
-      private void LeaveTask(string taskName) {
-        dependencyChain.Remove(taskName);
+      private void PopTaskFromStack(TTask task) {
+        dependencyChain.Remove(task);
         orderedDependencyChain.RemoveAt(orderedDependencyChain.Count - 1);
       }
 
-      private TaskGraph CreateTaskGraph(TTask task, string taskName, ImmutableArray<TaskGraph> dependencyTasks) {
+      private TaskGraph CreateTaskGraph(TTask task, ImmutableArray<TaskGraph> dependencyTasks) {
         var thisTaskGraph = new TaskGraph(actionOfTask(task), dependencyTasks);
-        finishedTasks.Add(taskName, thisTaskGraph);
+        taskToTaskGraph.Add(task, thisTaskGraph);
         return thisTaskGraph;
+      }
+
+      private void PushTaskOnStack(TTask task) {
+        dependencyChain.Add(task);
+        orderedDependencyChain.Add(task);
+      }
+
+      private void AssertNoCycles(TTask task) {
+        if (dependencyChain.Contains(task)) {
+          throw new Exception("Detected a dependency cycle: " +
+                              $"'{string.Join(" depends on ", orderedDependencyChain)} " +
+                              $"depends on {nameOfTask(task)}'.");
+        }
+      }
+
+      private void AssertNoTaskNameClashes(TTask task) {
+        var taskName = nameOfTask(task);
+        if (taskNames.Remove(taskName)) {
+          throw new Exception($"Detected multiple tasks with the name '{taskName}'. Tasks must have unique names.");
+        }
+        taskNames.Add(nameOfTask(task));
       }
     }
   }
