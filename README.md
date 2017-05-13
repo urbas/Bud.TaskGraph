@@ -18,7 +18,7 @@ var taskA = new TaskGraph(() => Console.WriteLine("A"));
 var taskB = new TaskGraph(() => Console.WriteLine("B"));
 var taskC = new TaskGraph(() => Console.WriteLine("C"), taskA, taskB);
 
-// This function blocks. It runs A and B first, and then C.
+// This function blocks. It runs A and B in parallel first, and then C.
 taskC.Run();
 
 // Asynchronous version of Run():
